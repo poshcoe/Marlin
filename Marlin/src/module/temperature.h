@@ -624,8 +624,42 @@ class Temperature {
 
   private:
 
+    /**
+     * Functions for controlling FAST PWM pins (fans, etc.)
+     * (8-bit AVRs only)
+     *
+     * get_pwm_timer
+     *  Grabs timer information and registers of the provided pin
+     *  returns Timer struct containing this information
+     *  Used by set_pwm_frequency, set_pwm_duty
+     *
+     * set_pwm_frequency
+     *  Sets the frequency of the timer corresponding to the provided pin
+     *  as close as possible to the provided desired frequency. Internally
+     *  calculates the required prescaler and resolution values required and
+     *  sets the timer registers accordingly.
+     *  NOTE that the frequency is applied to all pins on the timer (Ex OC3A, OC3B and OC3B)
+     *  NOTE that there are limitations, particularly if using TIMER2. (see Configuration_adv.h -> FAST FAN PWM Settings)
+     *
+     * set_pwm_duty
+     *  Sets the PWM duty cycle of the provided pin to the provided value
+     *  Optionally allows inverting the duty cycle [default = false]
+     *  Optionally allows changing the maximum size of the provided value to enable finer PWM duty control [default = 255]
+     *  NOTE that the frequency must have been already been set using set_pwm_frequency,
+     *  and the PWM output will not appear unless the pin is configured as an output.
+     */
     #if ENABLED(FAST_PWM_FAN)
-      static void setPwmFrequency(const pin_t pin, int val);
+      typedef struct Timer {
+          volatile uint8_t* TCCRnQ[3];  // max 3 TCCR registers per timer
+          volatile uint16_t* OCRnQ[3];  // max 3 OCR registers per timer
+          volatile uint16_t* ICRn;      // max 1 ICR register per timer
+          uint8_t n;                    // the timer number [0->5]
+          uint8_t q;                    // the timer output [0->2] (A->C)
+      } Timer;
+
+      static Timer get_pwm_timer(const pin_t pin);
+      static void set_pwm_frequency(const pin_t pin, int freq_desired);
+      static void set_pwm_duty(const pin_t pin, uint16_t v, uint16_t v_size = 255, bool invert = false);
     #endif
 
     static void set_current_temp_raw();
