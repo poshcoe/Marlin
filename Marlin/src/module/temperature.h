@@ -160,6 +160,10 @@ class Temperature {
                      soft_pwm_count_fan[FAN_COUNT];
     #endif
 
+    #if ENABLED(FAST_PWM_FAN)
+      static void set_pwm_duty(const pin_t pin, uint16_t v, uint16_t v_size = 255, bool invert = false);
+    #endif
+
     #if ENABLED(PIDTEMP)
       static hotend_pid_t pid[HOTENDS];
     #endif
@@ -659,7 +663,6 @@ class Temperature {
 
       static Timer get_pwm_timer(const pin_t pin);
       static void set_pwm_frequency(const pin_t pin, int freq_desired);
-      static void set_pwm_duty(const pin_t pin, uint16_t v, uint16_t v_size = 255, bool invert = false);
     #endif
 
     static void set_current_temp_raw();
