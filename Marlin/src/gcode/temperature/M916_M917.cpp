@@ -19,28 +19,48 @@
 
 #if FAN_COUNT > 0
 
-void GcodeSuite::M916() {
-    #if ENABLED(SPINDLE_LASER_FANPWM)
-        planner.spindle_laser_fanpwm_on = true; // enable pwm writes in planner.cpp
-    #endif
-}
+    #define STEP_UP_TIME    SPINDLE_LASER_FANPWM_POWERUP_DELAY / 255
+    #define STEP_DOWN_TIME  SPINDLE_LASER_FANPWM_POWERDOWN_DELAY / 255
 
-void GcodeSuite::M917() {
-    #if ENABLED(SPINDLE_LASER_FANPWM)
-        planner.spindle_laser_fanpwm_on = false; // disable pwm writes in planner.cpp
-        digitalWrite(SPINDLE_LASER_FANPWM_PIN, LOW); // disable PWM timer
-    #endif
-}
+    void GcodeSuite::M916() {
+        #if ENABLED(SPINDLE_LASER_FANPWM)
+            planner.spindle_laser_fanpwm_on = true;
 
-void GcodeSuite::M918() {
-    #if ENABLED(SPINDLE_LASER_FANPWM)
-        for(uint8_t i = 0; i < steps; i++){
-            thermalManager.set_pwm_duty(SPINDLE_LASER_FANPWM_PIN, );
+            const uint8_t s = parser.ushortval('S', 255); // requested pwm duty
+            const int8_t num_steps = s - fan_speed[SPINDLE_LASER_FANPWM_FAN]; // fan_speed[p] = the last pwm value set
 
+            millis_t ms_next = 0;
+            int8_t i = 0;
+            // increment/decrement pwm duty until it is at requested duty
+            if(num_steps > 0) // if we are increasing the PWM
+                while (i < num_steps) {
+                    const millis_t ms = millis();
+                    if (ELAPSED(ms, ms_next)) {
+                        ms_next = ms + STEP_UP_TIME;
+                        i += 1;
+                        thermalManager.set_pwm_duty(SPINDLE_LASER_FANPWM_PIN, s_last + i, 255, SPINDLE_LASER_FANPWM_INVERT);
+                    }
+                }
+            else if(num_steps < 0) { // if we are decreasing the PWM
+                while (i > num_steps) {
+                    const millis_t ms = millis();
+                    if (ELAPSED(ms, ms_next)) {
+                        ms_next = ms + STEP_DOWN_TIME;
+                        i -= 1;
+                        thermalManager.set_pwm_duty(SPINDLE_LASER_FANPWM_PIN, s_last + i, 255, SPINDLE_LASER_FANPWM_INVERT);
+                    }
+                }
+            }
+            fan_speed[SPINDLE_LASER_FANPWM_FAN] = s;
 
-        }
+        #endif
+    }
 
-
-}
-
+    void GcodeSuite::M917() {
+        #if ENABLED(SPINDLE_LASER_FANPWM)
+            planner.spindle_laser_fanpwm_on = false;        // disable pwm writes in planner.cpp
+            fan_speed[SPINDLE_LASER_FANPWM_FAN] = 0;        // reset pwm duty to 0
+            digitalWrite(SPINDLE_LASER_FANPWM_PIN, LOW);    // disable PWM timer
+        #endif
+    }
 #endif // FAN_COUNT > 0

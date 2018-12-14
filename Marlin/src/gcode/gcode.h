@@ -251,9 +251,9 @@
  * M999 - Restart after being stopped by error
  *
  * PoshCube
- *  M916 - Enables fan PWM analogWrites on SPINDLE_LASER_FANPWM_PIN, ready for control with M106/M107
- *  M917 - Disables fan PWM analogWrites on SPINDLE_LASER_FANPWM_PIN so it can be used elsewhere again
- *  
+ *  M916 - Enables FAST PWM on SPINDLE_LASER_FANPWM_PIN and Accellerates/decellerates spindle/laser PWM duty cycle to the requested value
+ *  M917 - Sets the PWM duty to 0 and disables FAST PWM on SPINDLE_LASER_FANPWM_PIN so it can be used elsewhere again
+ *
  * "T" Codes
  *
  * T0-T3 - Select an extruder (tool) by index: "T<n> F<units/min>"
