@@ -1398,7 +1398,7 @@ void Temperature::init() {
     #if defined(ARDUINO) && !defined(ARDUINO_ARCH_SAM)
       uint8_t q = 0;
       switch (digitalPinToTimer(pin)) {
-        //protect reserved timers (TIMER0 & TIMER1)
+        // Protect reserved timers (TIMER0 & TIMER1)
         #ifdef TCCR0A
           #if !AVR_AT90USB1286_FAMILY
             case TIMER0A:
@@ -1498,39 +1498,39 @@ void Temperature::init() {
   void Temperature::set_pwm_frequency(const pin_t pin, int frequency_desired) {
     #if defined(ARDUINO) && !defined(ARDUINO_ARCH_SAM)
       Temperature::Timer timer = get_pwm_timer(pin);
-      if (timer.n == 0) return; // don't proceed if protected timer or not recognised
+      if (timer.n == 0) return; // Don't proceed if protected timer or not recognised
 
       uint16_t size;
       if (timer.n == 2) size = 255; else size = 65535;
       uint16_t resolution = 255;
       uint8_t j = 0;
 
-      // calculating the prescaler and resolution to use to achieve closest frequency
+      // Calculating the prescaler and resolution to use to achieve closest frequency
       if (frequency_desired != 0) {
-        int frequency = F_CPU/(1024*size) + 1; // initialize frequency as lowest achievable
+        int frequency = F_CPU/(1024*size) + 1; // Initialize frequency as lowest achievable
         uint16_t prescaler[] = {0, 1, 8, /*TIMER2 ONLY*/32, 64, /*TIMER2 ONLY*/128, 256, 1024};
 
         // loop over prescaler values
         for (uint8_t i = 1; i < 8; i++) {
           uint16_t resolution_temp = 255;
           if (timer.n == 2) {
-            // no resolution calculation for TIMER2 unless enabled USE_OCR2A_AS_TOP
+            // No resolution calculation for TIMER2 unless enabled USE_OCR2A_AS_TOP
             #if ENABLED(USE_OCR2A_AS_TOP)
               resolution_temp = ((F_CPU / prescaler[i]) / frequency_desired) - 1;
             #endif
           }
           else {
-            // skip TIMER2 specific prescalers when not TIMER2
+            // Skip TIMER2 specific prescalers when not TIMER2
             if (i == 3 || i == 5) continue;
             resolution_temp = ((F_CPU / prescaler[i]) / frequency_desired) - 1;
           }
 
           LIMIT(resolution_temp, 1u, size);
-          // calculate frequency using test prescaler and resolution values
+          // Calculate frequency using test prescaler and resolution values
           int frequency_temp = (F_CPU / prescaler[i]) / (1 + resolution_temp);
-          // if new value is closest to desired freq
+          // If new value is closest to desired frequency
           if (ABS(frequency_temp - frequency_desired) < ABS(frequency - frequency_desired)) {
-              // remember these values
+              // Remember these values
               frequency = frequency_temp;
               resolution = resolution_temp;
               j = i;
@@ -1552,15 +1552,16 @@ void Temperature::init() {
       }
       else {
         _SET_WGMnQ(timer.TCCRnQ, WGM_FAST_PWM_ICRn);      // Waveform Generation Mode = FAST PWM with ICRn at TOP
-        _SET_ICRn(timer.ICRn, resolution);                // Set ICRn value (adjusting TOP) = resolution (as calculated)
+        _SET_ICRn(timer.ICRn, resolution);                // Set ICRn value (adjusting TOP) = resolution
       }
-      _SET_CSn(timer.TCCRnQ, j);                          // Clock Select Prescaler = j (as calculated)
+      _SET_CSn(timer.TCCRnQ, j);                          // Clock Select Prescaler = j
     #endif // ARDUINO && !ARDUINO_ARCH_SAM
   }
 
+  // Default v_size = 255, default bool invert = false
   void Temperature::set_pwm_duty(const pin_t pin, uint16_t v, uint16_t v_size, bool invert) {
     #if defined(ARDUINO) && !defined(ARDUINO_ARCH_SAM)
-      // if v is 0 or v_size (max), digitalWrite to LOW or HIGH.
+      // If v is 0 or v_size (max), digitalWrite to LOW or HIGH.
       // Note that digitalWrite also disables pwm output for us (sets COM bit to 0)
       if (v == 0) {
         digitalWrite(pin, LOW + invert);
@@ -1570,7 +1571,7 @@ void Temperature::init() {
       }
       else {
         Temperature::Timer timer = get_pwm_timer(pin);
-        if (timer.n == 0) return; // don't proceed if protected timer or not recognised
+        if (timer.n == 0) return; // Don't proceed if protected timer or not recognised
         // Set compare output mode to CLEAR -> SET or SET -> CLEAR (if inverted)
         #ifdef TCCR2
           _SET_COMnQ(timer.TCCRnQ, timer.q + (timer.q == 2), COM_CLEAR_SET + invert); // COM20 is on bit 4 of TCCR2, thus requires q + 1 in the macro
@@ -1582,7 +1583,7 @@ void Temperature::init() {
         if (timer.n == 2) { // if TIMER2
           top =
             #if ENABLED(USE_OCR2A_AS_TOP)
-              *timer.OCRnQ[0]; // OCR2A
+              *timer.OCRnQ[0]; // top = OCR2A
             #else
               255; // top = 0xFF (max)
             #endif
@@ -1591,8 +1592,8 @@ void Temperature::init() {
           top = *timer.ICRn; // top = ICRn
         }
 
-        v = v * ((float)top / v_size); // scale 8/16-bit v to top value
-        _SET_OCRnQ(timer.OCRnQ, timer.q, v); // set the duty
+        v = v * ((float)top / v_size); // Scale 8/16-bit v to top value
+        _SET_OCRnQ(timer.OCRnQ, timer.q, v); // Set the duty
       }
     #endif // ARDUINO && !ARDUINO_ARCH_SAM
   }
