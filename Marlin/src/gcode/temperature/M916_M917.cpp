@@ -1,13 +1,15 @@
 /** PoshCube
  *
- * M916: Enables fan PWM analogWrites on SPINDLE_LASER_FANPWM_PIN 
+ * M916: Enables fan PWM analogWrites on SPINDLE_LASER_FANPWM_PIN
  *       ready for control with M106/M107
- * 
+ *
  *  I    Ignore bit for protected pins
- * 
+ *
  * M917: Disables fan PWM analogWrites on SPINDLE_LASER_FANPWM_PIN
  *       so it can be used elsewhere again
- * 
+ *
+ * M918: Soft speed change
+ *
  */
 #include "../gcode.h"
 #include "../../Marlin.h"
@@ -28,6 +30,17 @@ void GcodeSuite::M917() {
         planner.spindle_laser_fanpwm_on = false; // disable pwm writes in planner.cpp
         digitalWrite(SPINDLE_LASER_FANPWM_PIN, LOW); // disable PWM timer
     #endif
+}
+
+void GcodeSuite::M918() {
+    #if ENABLED(SPINDLE_LASER_FANPWM)
+        for(uint8_t i = 0; i < steps; i++){
+            thermalManager.set_pwm_duty(SPINDLE_LASER_FANPWM_PIN, );
+
+
+        }
+
+
 }
 
 #endif // FAN_COUNT > 0

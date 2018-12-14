@@ -2094,22 +2094,22 @@ void Temperature::isr() {
     if (pwm_count_tmp >= 127) {
       pwm_count_tmp -= 127;
       soft_pwm_count_0 = (soft_pwm_count_0 & pwm_mask) + soft_pwm_amount[0];
-      WRITE_HEATER_0(soft_pwm_count_0 > pwm_mask ? HIGH : LOW);
+      if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_0(soft_pwm_count_0 > pwm_mask ? HIGH : LOW);
       #if HOTENDS > 1
         soft_pwm_count_1 = (soft_pwm_count_1 & pwm_mask) + soft_pwm_amount[1];
-        WRITE_HEATER_1(soft_pwm_count_1 > pwm_mask ? HIGH : LOW);
+        if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_1(soft_pwm_count_1 > pwm_mask ? HIGH : LOW);
         #if HOTENDS > 2
           soft_pwm_count_2 = (soft_pwm_count_2 & pwm_mask) + soft_pwm_amount[2];
-          WRITE_HEATER_2(soft_pwm_count_2 > pwm_mask ? HIGH : LOW);
+          if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_2(soft_pwm_count_2 > pwm_mask ? HIGH : LOW);
           #if HOTENDS > 3
             soft_pwm_count_3 = (soft_pwm_count_3 & pwm_mask) + soft_pwm_amount[3];
-            WRITE_HEATER_3(soft_pwm_count_3 > pwm_mask ? HIGH : LOW);
+            if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_3(soft_pwm_count_3 > pwm_mask ? HIGH : LOW);
             #if HOTENDS > 4
               soft_pwm_count_4 = (soft_pwm_count_4 & pwm_mask) + soft_pwm_amount[4];
-              WRITE_HEATER_4(soft_pwm_count_4 > pwm_mask ? HIGH : LOW);
+              if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_4(soft_pwm_count_4 > pwm_mask ? HIGH : LOW);
               #if HOTENDS > 5
                 soft_pwm_count_5 = (soft_pwm_count_5 & pwm_mask) + soft_pwm_amount[5];
-                WRITE_HEATER_5(soft_pwm_count_5 > pwm_mask ? HIGH : LOW);
+                if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_5(soft_pwm_count_5 > pwm_mask ? HIGH : LOW);
               #endif // HOTENDS > 5
             #endif // HOTENDS > 4
           #endif // HOTENDS > 3
@@ -2137,17 +2137,17 @@ void Temperature::isr() {
       #endif
     }
     else {
-      if (soft_pwm_count_0 <= pwm_count_tmp) WRITE_HEATER_0(LOW);
+      if (soft_pwm_count_0 <= pwm_count_tmp) if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_0(LOW);
       #if HOTENDS > 1
-        if (soft_pwm_count_1 <= pwm_count_tmp) WRITE_HEATER_1(LOW);
+        if (soft_pwm_count_1 <= pwm_count_tmp) if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_1(LOW);
         #if HOTENDS > 2
-          if (soft_pwm_count_2 <= pwm_count_tmp) WRITE_HEATER_2(LOW);
+          if (soft_pwm_count_2 <= pwm_count_tmp) if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_2(LOW);
           #if HOTENDS > 3
-            if (soft_pwm_count_3 <= pwm_count_tmp) WRITE_HEATER_3(LOW);
+            if (soft_pwm_count_3 <= pwm_count_tmp) if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_3(LOW);
             #if HOTENDS > 4
-              if (soft_pwm_count_4 <= pwm_count_tmp) WRITE_HEATER_4(LOW);
+              if (soft_pwm_count_4 <= pwm_count_tmp) if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_4(LOW);
               #if HOTENDS > 5
-                if (soft_pwm_count_5 <= pwm_count_tmp) WRITE_HEATER_5(LOW);
+                if (soft_pwm_count_5 <= pwm_count_tmp) if(!planner.spindle_laser_fanpwm_on) WRITE_HEATER_5(LOW);
               #endif // HOTENDS > 5
             #endif // HOTENDS > 4
           #endif // HOTENDS > 3

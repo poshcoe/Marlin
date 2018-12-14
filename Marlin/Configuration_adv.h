@@ -1660,8 +1660,11 @@
  */
 #define SPINDLE_LASER_FANPWM
 #if ENABLED(SPINDLE_LASER_FANPWM)
-  #define SPINDLE_LASER_FANPWM_PIN      HEATER_0_PIN      //select HEATER_x_PIN to use [0,1,2,3,4,5]
-  #define SPINDLE_LASER_FANPWM_FAN      1                 //select FANx output to emulate [0,1,2]
+  #define SPINDLE_LASER_FANPWM_PIN              HEATER_0_PIN      // select HEATER_x_PIN to use [0,1,2,3,4,5]
+  #define SPINDLE_LASER_FANWM_FAN               1                 // select FANx output to emulate [0,1,2]
+  #define SPINDLE_LASER_FANPWM_POWERUP_DELAY    2000              // delay in milliseconds to allow spind/laser to come up to speed
+  #define SPINDLE_LASER_FANPWM_POWERDOWN_DELAY  5000              // delay in milliseconds to allow spindle/laser to come up to speed
+  #define SPINDLE_LASER_FANPWM_INVERT           false             // invert PWM
 #endif
 
 //#define SPINDLE_LASER_ENABLE
