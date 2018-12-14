@@ -1560,33 +1560,40 @@ void Temperature::init() {
 
   void Temperature::set_pwm_duty(const pin_t pin, uint16_t v, uint16_t v_size, bool invert) {
     #if defined(ARDUINO) && !defined(ARDUINO_ARCH_SAM)
-      Temperature::Timer timer = get_pwm_timer(pin);
-      if (timer.n == 0) return; // don't proceed if protected timer or not recognised
-
-      // get top and timer_size value for scaling of v
-      uint16_t top;
-      if (timer.n == 2) { // if TIMER2
+      // if v is 0 or v_size (max), digitalWrite to LOW or HIGH.
+      // Note that digitalWrite also disables pwm output for us (sets COM bit to 0)
+      if (v == 0) {
+        digitalWrite(pin, LOW + invert);
+      }
+      else if (v == v_size) {
+        digitalWrite(pin, HIGH - invert);
+      }
+      else {
+        Temperature::Timer timer = get_pwm_timer(pin);
+        if (timer.n == 0) return; // don't proceed if protected timer or not recognised
+        // Set compare output mode to CLEAR -> SET or SET -> CLEAR (if inverted)
         #ifdef TCCR2
-          _SET_COMnQ(timer.TCCRnQ, timer.q + 1, COM_CLEAR_SET+invert);
-          top = 255;
-        #elif defined TCCR2A
+          _SET_COMnQ(timer.TCCRnQ, timer.q + (timer.q == 2), COM_CLEAR_SET + invert); // COM20 is on bit 4 of TCCR2, thus requires q + 1 in the macro
+        #else
           _SET_COMnQ(timer.TCCRnQ, timer.q, COM_CLEAR_SET + invert);
+        #endif
+
+        uint16_t top;
+        if (timer.n == 2) { // if TIMER2
           top =
             #if ENABLED(USE_OCR2A_AS_TOP)
               *timer.OCRnQ[0]; // OCR2A
             #else
-              255;
+              255; // top = 0xFF (max)
             #endif
-        #endif
+        }
+        else {
+          top = *timer.ICRn; // top = ICRn
+        }
+
+        v = v * ((float)top / v_size); // scale 8/16-bit v to top value
+        _SET_OCRnQ(timer.OCRnQ, timer.q, v); // set the duty
       }
-      else {
-        top = *timer.ICRn;
-        // Compare Output Mode = CLEAR at BOTTOM, SET at TOP (or inverted)
-        _SET_COMnQ(timer.TCCRnQ, timer.q, COM_CLEAR_SET+invert);
-      }
-      // scale 8/16-bit v to top value
-      v = v * ((float)top / v_size);
-      _SET_OCRnQ(timer.OCRnQ, timer.q, v);
     #endif // ARDUINO && !ARDUINO_ARCH_SAM
   }
 
