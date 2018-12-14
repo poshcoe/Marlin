@@ -118,7 +118,22 @@
 // Misc. Functions
 //
 #define SDSS               26   // B6 SDCS
+
 #define FILWIDTH_PIN        2   // Analog Input
+
+// PoshCube
+// TODO move this
+// SPINDLE_LASER_FANPWM
+#if ENABLED(SPINDLE_LASER_FANPWM)
+  #if SPINDLE_LASER_FANPWM_FAN == 0
+    #define FAN_PIN SPINDLE_LASER_FANPWM_PIN
+  #elif SPINDLE_LASER_FANPWM_FAN == 1
+    #define FAN1_PIN SPINDLE_LASER_FANPWM_PIN
+  #elif SPINDLE_LASER_FANPWM_FAN == 2
+    #define FAN2_PIN SPINDLE_LASER_FANPWM_PIN
+  #endif
+#endif
+
 
 //
 // LCD / Controller

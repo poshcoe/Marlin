@@ -92,6 +92,10 @@
 #if ANY_THERMISTOR_IS(52) // beta25 = 4338 K, R25 = 200 kOhm, Pull-up = 1 kOhm, "ATC Semitec 204GT-2"
   #include "thermistor_52.h"
 #endif
+//Poshcube
+#if ANY_THERMISTOR_IS(53)  // 100k thermistor - ATC Semitec 104GTA-2 (mismatched E3D thermistor)
+  #include "thermistor_53.h"
+#endif
 #if ANY_THERMISTOR_IS(55) // beta25 = 4267 K, R25 = 100 kOhm, Pull-up = 1 kOhm, "ATC Semitec 104GT-2 (Used on ParCan)"
   #include "thermistor_55.h"
 #endif

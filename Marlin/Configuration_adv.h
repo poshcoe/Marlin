@@ -243,7 +243,7 @@
  *   USE_OCR2A_AS_TOP sacrifices duty cycle control resolution to achieve this broader range of frequencies.
  */
 #if ENABLED(FAST_PWM_FAN)
-  //#define FAST_PWM_FAN_FREQUENCY 7800
+  #define FAST_PWM_FAN_FREQUENCY 20000
   //#define USE_OCR2A_AS_TOP
 #endif
 
@@ -1637,6 +1637,15 @@
 /**
  * Spindle & Laser control
  *
+ * PoshCube
+ * Use Fan PWM control on a Hotend pin for controlling a spindle on hotend mosfets
+ * To use this feature, add a #define FANx_PIN equal to your HOTENDx_PIN
+ * If using HOTEND0_PIN, you will also have to swap one of the timer definitions in fastio_ARCHITECHTURE.h
+ * Essentially, the Hotend pin will function as a hotend, unless M916 is called, which enables FAN_PWM on the hotend pin.
+ * The pin will not be temperature controlled until reset.
+ *
+ * OR
+ *
  * Add the M3, M4, and M5 commands to turn the spindle/laser on and off, and
  * to set spindle speed, spindle direction, and laser power.
  *
@@ -1649,6 +1658,12 @@
  *
  * See http://marlinfw.org/docs/configuration/laser_spindle.html for more config details.
  */
+#define SPINDLE_LASER_FANPWM
+#if ENABLED(SPINDLE_LASER_FANPWM)
+  #define SPINDLE_LASER_FANPWM_PIN      HEATER_0_PIN      //select HEATER_x_PIN to use [0,1,2,3,4,5]
+  #define SPINDLE_LASER_FANPWM_FAN      1                 //select FANx output to emulate [0,1,2]
+#endif
+
 //#define SPINDLE_LASER_ENABLE
 #if ENABLED(SPINDLE_LASER_ENABLE)
 

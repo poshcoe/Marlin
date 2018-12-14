@@ -212,6 +212,11 @@ float Planner::previous_speed[NUM_AXIS],
   volatile uint32_t Planner::block_buffer_runtime_us = 0;
 #endif
 
+// Poshcube
+#if ENABLED(SPINDLE_LASER_FANPWM)
+  bool Planner::spindle_laser_fanpwm_on = false;
+#endif
+
 /**
  * Class and Instance Methods
  */
@@ -1275,15 +1280,33 @@ void Planner::check_axes_activity() {
         thermalManager.soft_pwm_amount_fan[2] = CALC_FAN_SPEED(2);
       #endif
 
+    // PoshCube
+    // Added for M916
     #elif ENABLED(FAST_PWM_FAN)
+
       #if HAS_FAN0
-        thermalManager.set_pwm_duty(FAN_PIN, CALC_FAN_SPEED(0));
+        #if SPINDLE_LASER_FANPWM_FAN == 0
+          //if mode is fanpwm
+          if (spindle_laser_fanpwm_on) thermalManager.set_pwm_duty(FAN_PIN, CALC_FAN_SPEED(0));
+        #else
+          thermalManager.set_pwm_duty(FAN_PIN, CALC_FAN_SPEED(0));
+        #endif
       #endif
       #if HAS_FAN1
-        thermalManager.set_pwm_duty(FAN1_PIN, CALC_FAN_SPEED(1));
+        #if SPINDLE_LASER_FANPWM_FAN == 1
+          //if mode is fanpwm
+          if (spindle_laser_fanpwm_on) thermalManager.set_pwm_duty(FAN1_PIN, CALC_FAN_SPEED(1));
+        #else
+          thermalManager.set_pwm_duty(FAN1_PIN, CALC_FAN_SPEED(1));
+        #endif
       #endif
       #if HAS_FAN2
-        thermalManager.set_pwm_duty(FAN2_PIN, CALC_FAN_SPEED(2));
+        #if SPINDLE_LASER_FANPWM_FAN == 2
+          //if mode is fanpwm
+          if (spindle_laser_fanpwm_on) thermalManager.set_pwm_duty(FAN2_PIN, CALC_FAN_SPEED(2));
+        #else
+          thermalManager.set_pwm_duty(FAN2_PIN, CALC_FAN_SPEED(2));
+        #endif
       #endif
 
     #else

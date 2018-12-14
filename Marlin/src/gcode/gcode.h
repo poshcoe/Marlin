@@ -250,6 +250,10 @@
  * M928 - Start SD logging: "M928 filename.gco". Stop with M29. (Requires SDSUPPORT)
  * M999 - Restart after being stopped by error
  *
+ * PoshCube
+ *  M916 - Enables fan PWM analogWrites on SPINDLE_LASER_FANPWM_PIN, ready for control with M106/M107
+ *  M917 - Disables fan PWM analogWrites on SPINDLE_LASER_FANPWM_PIN so it can be used elsewhere again
+ *  
  * "T" Codes
  *
  * T0-T3 - Select an extruder (tool) by index: "T<n> F<units/min>"
@@ -807,6 +811,12 @@ private:
     #if ENABLED(TMC_Z_CALIBRATION)
       static void M915();
     #endif
+  #endif
+
+  // PoshCube
+  #if ENABLED(SPINDLE_LASER_FANPWM)
+    static void M916();
+    static void M917();
   #endif
 
   #if HAS_DIGIPOTSS || HAS_MOTOR_CURRENT_PWM || ENABLED(DIGIPOT_I2C) || ENABLED(DAC_STEPPER_CURRENT)

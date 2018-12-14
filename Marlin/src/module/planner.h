@@ -291,6 +291,11 @@ class Planner {
       static bool abort_on_endstop_hit;
     #endif
 
+    // PoshCube
+    #if ENABLED(SPINDLE_LASER_FANPWM)
+      static bool spindle_laser_fanpwm_on;
+    #endif
+
   private:
 
     /**
