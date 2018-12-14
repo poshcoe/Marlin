@@ -222,6 +222,31 @@
 //#define FAN_MIN_PWM 50
 //#define FAN_MAX_PWM 128
 
+/**
+ * FAST PWM FAN Settings
+ *
+ * Use to change the FAST FAN PWM frequency (if enabled in Configuration.h)
+ * Combinations of PWM Prescale and PWM Resolutions used internally to produce a
+ * frequency as close as possible to the desired frequency.
+ *
+ * FAST_PWM_FAN_FREQUENCY [undefined by default]
+ *   Set this to your desired frequency.
+ *   If left undefined this defaults to F = F_CPU/(256*8)
+ *   ie F = 7.812 Khz on 16 MHz microcontrollers or F = 9.766 KHz on 20 MHz
+ *
+ * USE_OCR2A_AS_TOP [undefined by default]
+ *   On boards using TIMER2 for PWM, only the prescaler values [1 , 8, 32, 64, 128, 256, 1042]
+ *   can be used to achieve your desired frequency. Thus there are only a few possible frequencies on TIMER2:
+ *   F = F_CPU/(256*[1, 8, 32, 64, 128, 256, 1042]) = [62.5 KHz, 7.8 KHz, 1.95 KHz, 977 Hz, 488 Hz, 244 Hz, 60 Hz], for F_CPU = 16 MHz
+ *   This can be overcome by enabling USE_OCR2A_AS_TOP. However, if this option is enabled PWM will be unavailable on
+ *   the pin OC2A. Thus, this option should only be used if you are not using the 0C2A pin for PWM. (Check your schematic)
+ *   USE_OCR2A_AS_TOP sacrifices duty cycle control resolution to achieve this broader range of frequencies.
+ */
+#if ENABLED(FAST_PWM_FAN)
+  //#define FAST_PWM_FAN_FREQUENCY 7800
+  //#define USE_OCR2A_AS_TOP
+#endif
+
 // @section extruder
 
 /**

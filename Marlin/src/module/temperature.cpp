@@ -1153,28 +1153,28 @@ void Temperature::init() {
   #if HAS_FAN0
     SET_OUTPUT(FAN_PIN);
     #if ENABLED(FAST_PWM_FAN)
-      setPwmFrequency(FAN_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+      set_pwm_frequency(FAN_PIN, FAST_PWM_FAN_FREQUENCY);
     #endif
   #endif
 
   #if HAS_FAN1
     SET_OUTPUT(FAN1_PIN);
     #if ENABLED(FAST_PWM_FAN)
-      setPwmFrequency(FAN1_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+      set_pwm_frequency(FAN1_PIN, FAST_PWM_FAN_FREQUENCY);
     #endif
   #endif
 
   #if HAS_FAN2
     SET_OUTPUT(FAN2_PIN);
     #if ENABLED(FAST_PWM_FAN)
-      setPwmFrequency(FAN2_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+      set_pwm_frequency(FAN2_PIN, FAST_PWM_FAN_FREQUENCY);
     #endif
   #endif
 
   #if ENABLED(USE_CONTROLLER_FAN)
     SET_OUTPUT(CONTROLLER_FAN_PIN);
     #if ENABLED(FAST_PWM_FAN)
-      setPwmFrequency(CONTROLLER_FAN_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+      set_pwm_frequency(CONTROLLER_FAN_PIN, FAST_PWM_FAN_FREQUENCY);
     #endif
   #endif
 
@@ -1232,7 +1232,7 @@ void Temperature::init() {
     #if E0_AUTO_FAN_PIN == FAN1_PIN
       SET_OUTPUT(E0_AUTO_FAN_PIN);
       #if ENABLED(FAST_PWM_FAN)
-        setPwmFrequency(E0_AUTO_FAN_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+        set_pwm_frequency(E0_AUTO_FAN_PIN, FAST_PWM_FAN_FREQUENCY);
       #endif
     #else
       SET_OUTPUT(E0_AUTO_FAN_PIN);
@@ -1242,7 +1242,7 @@ void Temperature::init() {
     #if E1_AUTO_FAN_PIN == FAN1_PIN
       SET_OUTPUT(E1_AUTO_FAN_PIN);
       #if ENABLED(FAST_PWM_FAN)
-        setPwmFrequency(E1_AUTO_FAN_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+        set_pwm_frequency(E1_AUTO_FAN_PIN, FAST_PWM_FAN_FREQUENCY);
       #endif
     #else
       SET_OUTPUT(E1_AUTO_FAN_PIN);
@@ -1252,7 +1252,7 @@ void Temperature::init() {
     #if E2_AUTO_FAN_PIN == FAN1_PIN
       SET_OUTPUT(E2_AUTO_FAN_PIN);
       #if ENABLED(FAST_PWM_FAN)
-        setPwmFrequency(E2_AUTO_FAN_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+        set_pwm_frequency(E2_AUTO_FAN_PIN, FAST_PWM_FAN_FREQUENCY);
       #endif
     #else
       SET_OUTPUT(E2_AUTO_FAN_PIN);
@@ -1262,7 +1262,7 @@ void Temperature::init() {
     #if E3_AUTO_FAN_PIN == FAN1_PIN
       SET_OUTPUT(E3_AUTO_FAN_PIN);
       #if ENABLED(FAST_PWM_FAN)
-        setPwmFrequency(E3_AUTO_FAN_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+        set_pwm_frequency(E3_AUTO_FAN_PIN, FAST_PWM_FAN_FREQUENCY);
       #endif
     #else
       SET_OUTPUT(E3_AUTO_FAN_PIN);
@@ -1272,7 +1272,7 @@ void Temperature::init() {
     #if E4_AUTO_FAN_PIN == FAN1_PIN
       SET_OUTPUT(E4_AUTO_FAN_PIN);
       #if ENABLED(FAST_PWM_FAN)
-        setPwmFrequency(E4_AUTO_FAN_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+        set_pwm_frequency(E4_AUTO_FAN_PIN, FAST_PWM_FAN_FREQUENCY);
       #endif
     #else
       SET_OUTPUT(E4_AUTO_FAN_PIN);
@@ -1282,7 +1282,7 @@ void Temperature::init() {
     #if E5_AUTO_FAN_PIN == FAN1_PIN
       SET_OUTPUT(E5_AUTO_FAN_PIN);
       #if ENABLED(FAST_PWM_FAN)
-        setPwmFrequency(E5_AUTO_FAN_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+        set_pwm_frequency(E5_AUTO_FAN_PIN, FAST_PWM_FAN_FREQUENCY);
       #endif
     #else
       SET_OUTPUT(E5_AUTO_FAN_PIN);
@@ -1292,7 +1292,7 @@ void Temperature::init() {
     #if CHAMBER_AUTO_FAN_PIN == FAN1_PIN
       SET_OUTPUT(CHAMBER_AUTO_FAN_PIN);
       #if ENABLED(FAST_PWM_FAN)
-        setPwmFrequency(CHAMBER_AUTO_FAN_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
+        set_pwm_frequency(CHAMBER_AUTO_FAN_PIN, FAST_PWM_FAN_FREQUENCY);
       #endif
     #else
       SET_OUTPUT(CHAMBER_AUTO_FAN_PIN);
@@ -1392,43 +1392,210 @@ void Temperature::init() {
   #endif
 }
 
-#if ENABLED(FAST_PWM_FAN)
 
-  void Temperature::setPwmFrequency(const pin_t pin, int val) {
+#if ENABLED(FAST_PWM_FAN)
+  Temperature::Timer Temperature::get_pwm_timer(pin_t pin) {
     #if defined(ARDUINO) && !defined(ARDUINO_ARCH_SAM)
-      val &= 0x07;
+      uint8_t q = 0;
       switch (digitalPinToTimer(pin)) {
+        // Protect reserved timers (TIMER0 & TIMER1)
         #ifdef TCCR0A
           #if !AVR_AT90USB1286_FAMILY
             case TIMER0A:
           #endif
-          case TIMER0B:                           //_SET_CS(0, val);
-                                                    break;
+          case TIMER0B:
         #endif
         #ifdef TCCR1A
-          case TIMER1A: case TIMER1B:             //_SET_CS(1, val);
-                                                    break;
+          case TIMER1A: case TIMER1B:
         #endif
+                                            break;
         #if defined(TCCR2) || defined(TCCR2A)
           #ifdef TCCR2
-            case TIMER2:
+            case TIMER2: {
+              Temperature::Timer timer = {
+                /*TCCRnQ*/  { &TCCR2, NULL, NULL},
+                /*OCRnQ*/   { (uint16_t*)&OCR2, NULL, NULL},
+                /*ICRn*/      NULL,
+                /*n, q*/      2, 0
+              };
+            }
+          #elif defined TCCR2A
+            #if ENABLED(USE_OCR2A_AS_TOP)
+              case TIMER2A:   break; // protect TIMER2A
+              case TIMER2B: {
+                Temperature::Timer timer = {
+                  /*TCCRnQ*/  { &TCCR2A,  &TCCR2B,  NULL},
+                  /*OCRnQ*/   { (uint16_t*)&OCR2A, (uint16_t*)&OCR2B, NULL},
+                  /*ICRn*/      NULL,
+                  /*n, q*/      2, 1
+                };
+                return timer;
+              }
+            #else
+              case TIMER2B:   q += 1;
+              case TIMER2A: {
+                Temperature::Timer timer = {
+                  /*TCCRnQ*/  { &TCCR2A,  &TCCR2B,  NULL},
+                  /*OCRnQ*/   { (uint16_t*)&OCR2A, (uint16_t*)&OCR2B, NULL},
+                  /*ICRn*/      NULL,
+                                2, q
+                };
+                return timer;
+              }
+            #endif
           #endif
-          #ifdef TCCR2A
-            case TIMER2A: case TIMER2B:
-          #endif
-                                                    _SET_CS(2, val); break;
         #endif
         #ifdef TCCR3A
-          case TIMER3A: case TIMER3B: case TIMER3C: _SET_CS(3, val); break;
+          case TIMER3C:   q += 1;
+          case TIMER3B:   q += 1;
+          case TIMER3A: {
+            Temperature::Timer timer = {
+              /*TCCRnQ*/  { &TCCR3A,  &TCCR3B,  &TCCR3C},
+              /*OCRnQ*/   { &OCR3A,   &OCR3B,   &OCR3C},
+              /*ICRn*/      &ICR3,
+              /*n, q*/      3, q
+            };
+            return timer;
+          }
         #endif
         #ifdef TCCR4A
-          case TIMER4A: case TIMER4B: case TIMER4C: _SET_CS(4, val); break;
+          case TIMER4C:   q += 1;
+          case TIMER4B:   q += 1;
+          case TIMER4A: {
+            Temperature::Timer timer = {
+              /*TCCRnQ*/  { &TCCR4A,  &TCCR4B,  &TCCR4C},
+              /*OCRnQ*/   { &OCR4A,   &OCR4B,   &OCR4C},
+              /*ICRn*/      &ICR4,
+              /*n, q*/      4, q
+            };
+            return timer;
+          }
         #endif
         #ifdef TCCR5A
-          case TIMER5A: case TIMER5B: case TIMER5C: _SET_CS(5, val); break;
+          case TIMER5C:   q += 1;
+          case TIMER5B:   q += 1;
+          case TIMER5A: {
+            Temperature::Timer timer = {
+              /*TCCRnQ*/  { &TCCR5A,  &TCCR5B,  &TCCR5C},
+              /*OCRnQ*/   { &OCR5A,   &OCR5B,   &OCR5C },
+              /*ICRn*/      &ICR5,
+              /*n, q*/      5, q
+            };
+            return timer;
+          }
         #endif
       }
-    #endif
+      Temperature::Timer timer = {
+          /*TCCRnQ*/  { NULL, NULL, NULL},
+          /*OCRnQ*/   { NULL, NULL, NULL},
+          /*ICRn*/      NULL,
+                        0, 0
+      };
+      return timer;
+    #endif // ARDUINO && !ARDUINO_ARCH_SAM
+  }
+
+  void Temperature::set_pwm_frequency(const pin_t pin, int frequency_desired) {
+    #if defined(ARDUINO) && !defined(ARDUINO_ARCH_SAM)
+      Temperature::Timer timer = get_pwm_timer(pin);
+      if (timer.n == 0) return; // Don't proceed if protected timer or not recognised
+
+      uint16_t size;
+      if (timer.n == 2) size = 255; else size = 65535;
+      uint16_t resolution = 255;
+      uint8_t j = 0;
+
+      // Calculating the prescaler and resolution to use to achieve closest frequency
+      if (frequency_desired != 0) {
+        int frequency = F_CPU/(1024*size) + 1; // Initialize frequency as lowest achievable
+        uint16_t prescaler[] = {0, 1, 8, /*TIMER2 ONLY*/32, 64, /*TIMER2 ONLY*/128, 256, 1024};
+
+        // loop over prescaler values
+        for (uint8_t i = 1; i < 8; i++) {
+          uint16_t resolution_temp = 255;
+          if (timer.n == 2) {
+            // No resolution calculation for TIMER2 unless enabled USE_OCR2A_AS_TOP
+            #if ENABLED(USE_OCR2A_AS_TOP)
+              resolution_temp = ((F_CPU / prescaler[i]) / frequency_desired) - 1;
+            #endif
+          }
+          else {
+            // Skip TIMER2 specific prescalers when not TIMER2
+            if (i == 3 || i == 5) continue;
+            resolution_temp = ((F_CPU / prescaler[i]) / frequency_desired) - 1;
+          }
+
+          LIMIT(resolution_temp, 1u, size);
+          // Calculate frequency using test prescaler and resolution values
+          int frequency_temp = (F_CPU / prescaler[i]) / (1 + resolution_temp);
+          // If new value is closest to desired frequency
+          if (ABS(frequency_temp - frequency_desired) < ABS(frequency - frequency_desired)) {
+              // Remember these values
+              frequency = frequency_temp;
+              resolution = resolution_temp;
+              j = i;
+          }
+        }
+      }
+
+      if (timer.n == 2) {
+        #ifdef TCCR2
+          _SET_WGMnQ(timer.TCCRnQ, WGM2_FAST_PWM);         // Waveform Generation Mode = FAST PWM (TOP = 255)
+        #elif defined TCCR2A
+          #if ENABLED(USE_OCR2A_AS_TOP)
+            _SET_WGMnQ(timer.TCCRnQ, WGM2_FAST_PWM_OCR2A); // Waveform Generation Mode = FAST PWM with OCR2A at TOP
+            _SET_OCRnQ(timer.OCRnQ, 0, resolution);        // Set OCR2A value (adjusting TOP) = resolution (as calculated)
+          #else
+            _SET_WGMnQ(timer.TCCRnQ, WGM2_FAST_PWM);
+          #endif
+        #endif
+      }
+      else {
+        _SET_WGMnQ(timer.TCCRnQ, WGM_FAST_PWM_ICRn);      // Waveform Generation Mode = FAST PWM with ICRn at TOP
+        _SET_ICRn(timer.ICRn, resolution);                // Set ICRn value (adjusting TOP) = resolution
+      }
+      _SET_CSn(timer.TCCRnQ, j);                          // Clock Select Prescaler = j
+    #endif // ARDUINO && !ARDUINO_ARCH_SAM
+  }
+
+  // Default v_size = 255, default bool invert = false
+  void Temperature::set_pwm_duty(const pin_t pin, uint16_t v, uint16_t v_size, bool invert) {
+    #if defined(ARDUINO) && !defined(ARDUINO_ARCH_SAM)
+      // If v is 0 or v_size (max), digitalWrite to LOW or HIGH.
+      // Note that digitalWrite also disables pwm output for us (sets COM bit to 0)
+      if (v == 0) {
+        digitalWrite(pin, LOW + invert);
+      }
+      else if (v == v_size) {
+        digitalWrite(pin, HIGH - invert);
+      }
+      else {
+        Temperature::Timer timer = get_pwm_timer(pin);
+        if (timer.n == 0) return; // Don't proceed if protected timer or not recognised
+        // Set compare output mode to CLEAR -> SET or SET -> CLEAR (if inverted)
+        #ifdef TCCR2
+          _SET_COMnQ(timer.TCCRnQ, timer.q + (timer.q == 2), COM_CLEAR_SET + invert); // COM20 is on bit 4 of TCCR2, thus requires q + 1 in the macro
+        #else
+          _SET_COMnQ(timer.TCCRnQ, timer.q, COM_CLEAR_SET + invert);
+        #endif
+
+        uint16_t top;
+        if (timer.n == 2) { // if TIMER2
+          top =
+            #if ENABLED(USE_OCR2A_AS_TOP)
+              *timer.OCRnQ[0]; // top = OCR2A
+            #else
+              255; // top = 0xFF (max)
+            #endif
+        }
+        else {
+          top = *timer.ICRn; // top = ICRn
+        }
+
+        v = v * ((float)top / v_size); // Scale 8/16-bit v to top value
+        _SET_OCRnQ(timer.OCRnQ, timer.q, v); // Set the duty
+      }
+    #endif // ARDUINO && !ARDUINO_ARCH_SAM
   }
 
 #endif // FAST_PWM_FAN
