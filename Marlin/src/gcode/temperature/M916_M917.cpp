@@ -27,7 +27,8 @@
             planner.spindle_laser_fanpwm_on = true;
 
             const uint8_t s = parser.ushortval('S', 255); // requested pwm duty
-            const int8_t num_steps = s - fan_speed[SPINDLE_LASER_FANPWM_FAN]; // fan_speed[p] = the last pwm value set
+            const uint8_t s_last = fan_speed[SPINDLE_LASER_FANPWM_FAN]; // fan_speed[p] = the last pwm value set
+            const int8_t num_steps = s - s_last;
 
             millis_t ms_next = 0;
             int8_t i = 0;

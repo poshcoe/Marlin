@@ -237,7 +237,7 @@
  *
  * USE_OCR2A_AS_TOP [undefined by default]
  *   On boards using TIMER2 for PWM, there are limitations involved that result in only a few possible frequencies on TIMER2. Here's a list:
- *   16MHz MCUs: [62.5 KHz, 31.4 KHz (default), 7.8 KHz, 3.92 KHz, 1.95 KHz, 977 Hz, 488 Hz, 244 Hz, 60 Hz, 30 Hz]
+ *   16MHz MCUs: [62.5 KHz, 31.4 KHz (default), 7.8 KHz, 3.92 KHz, 1.95 KHz, 977 Hz, 488 Hz, 244 Hz, 122 Hz, 60 Hz, 30 Hz]
  *   20MHz MCUs: [78.1 KHz, 39.2 KHz (default), 9.77 KHz, 4.9 KHz, 2.44 KHz, 1.22 KHz, 610 Hz, 305 Hz, 153 Hz, 76 Hz, 38 Hz]
  *   A wider set can be achieved by enabling USE_OCR2A_AS_TOP. However, if this option is enabled PWM will be unavailable on
  *   the pin OC2A. Thus, this option should only be used if you are not using the 0C2A pin for PWM. (Check your schematic)
@@ -1662,7 +1662,7 @@
 #define SPINDLE_LASER_FANPWM
 #if ENABLED(SPINDLE_LASER_FANPWM)
   #define SPINDLE_LASER_FANPWM_PIN              HEATER_0_PIN      // select HEATER_x_PIN to use [0,1,2,3,4,5]
-  #define SPINDLE_LASER_FANWM_FAN               1                 // select FANx output to emulate [0,1,2]
+  #define SPINDLE_LASER_FANPWM_FAN               1                 // select FANx output to emulate [0,1,2]
   #define SPINDLE_LASER_FANPWM_POWERUP_DELAY    2000              // delay in milliseconds to allow spind/laser to come up to speed
   #define SPINDLE_LASER_FANPWM_POWERDOWN_DELAY  5000              // delay in milliseconds to allow spindle/laser to come up to speed
   #define SPINDLE_LASER_FANPWM_INVERT           false             // invert PWM
