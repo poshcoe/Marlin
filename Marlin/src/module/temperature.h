@@ -662,7 +662,7 @@ class Temperature {
       } Timer;
 
       static Timer get_pwm_timer(const pin_t pin);
-      static void set_pwm_frequency(const pin_t pin, int freq_desired);
+      static void set_pwm_frequency(const pin_t pin, int f_desired);
     #endif
 
     static void set_current_temp_raw();

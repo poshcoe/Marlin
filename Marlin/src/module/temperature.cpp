@@ -1495,66 +1495,92 @@ void Temperature::init() {
     #endif // ARDUINO && !ARDUINO_ARCH_SAM
   }
 
-  void Temperature::set_pwm_frequency(const pin_t pin, int frequency_desired) {
+  void Temperature::set_pwm_frequency(const pin_t pin, int f_desired) {
     #if defined(ARDUINO) && !defined(ARDUINO_ARCH_SAM)
       Temperature::Timer timer = get_pwm_timer(pin);
       if (timer.n == 0) return; // Don't proceed if protected timer or not recognised
-
       uint16_t size;
       if (timer.n == 2) size = 255; else size = 65535;
-      uint16_t resolution = 255;
-      uint8_t j = 0;
+
+      uint16_t res = 255;   // resolution (TOP value)
+      uint8_t j = 0;        // prescaler index
+      uint8_t wgm = 1;      // waveform generation mode
 
       // Calculating the prescaler and resolution to use to achieve closest frequency
-      if (frequency_desired != 0) {
-        int frequency = F_CPU/(1024*size) + 1; // Initialize frequency as lowest achievable
+      if (f_desired != 0) {
+        int f = F_CPU/(2*1024*size) + 1; // Initialize frequency as lowest (non-zero) achievable
         uint16_t prescaler[] = {0, 1, 8, /*TIMER2 ONLY*/32, 64, /*TIMER2 ONLY*/128, 256, 1024};
 
         // loop over prescaler values
         for (uint8_t i = 1; i < 8; i++) {
-          uint16_t resolution_temp = 255;
+          uint16_t res_temp_fast = 255, res_temp_phase_correct = 255;
           if (timer.n == 2) {
             // No resolution calculation for TIMER2 unless enabled USE_OCR2A_AS_TOP
             #if ENABLED(USE_OCR2A_AS_TOP)
-              resolution_temp = ((F_CPU / prescaler[i]) / frequency_desired) - 1;
+              res_temp_fast = (F_CPU / (prescaler[i] * f_desired)) - 1;
+              res_temp_phase_correct = F_CPU / (2 * prescaler[i] * f_desired);
             #endif
           }
           else {
             // Skip TIMER2 specific prescalers when not TIMER2
             if (i == 3 || i == 5) continue;
-            resolution_temp = ((F_CPU / prescaler[i]) / frequency_desired) - 1;
+            res_temp_fast = (F_CPU / (prescaler[i] * f_desired)) - 1;
+            res_temp_phase_correct = F_CPU / (2 * prescaler[i] * f_desired);
           }
 
-          LIMIT(resolution_temp, 1u, size);
-          // Calculate frequency using test prescaler and resolution values
-          int frequency_temp = (F_CPU / prescaler[i]) / (1 + resolution_temp);
-          // If new value is closest to desired frequency
-          if (ABS(frequency_temp - frequency_desired) < ABS(frequency - frequency_desired)) {
-              // Remember these values
-              frequency = frequency_temp;
-              resolution = resolution_temp;
-              j = i;
+          LIMIT(res_temp_fast, 1u, size);
+          LIMIT(res_temp_phase_correct, 1u, size);
+          // Calculate frequncies of test prescaler and resolution values
+          int f_temp_fast = F_CPU / (prescaler[i] * (1 + res_temp_fast));
+          int f_temp_phase_correct = F_CPU / (2 * prescaler[i] * res_temp_phase_correct);
+
+          // If FAST values are closest to desired f
+          if (ABS(f_temp_fast - f_desired) < ABS(f - f_desired)
+              && ABS(f_temp_fast - f_desired) <= ABS(f_temp_phase_correct - f_desired)) {
+            // Remember this combination
+            f = f_temp_fast;
+            res = res_temp_fast;
+            j = i;
+            // Set the Wave Generation Mode to FAST PWM
+            if(timer.n == 2){
+              wgm =
+                #if ENABLED(USE_OCR2A_AS_TOP)
+                  WGM2_FAST_PWM_OCR2A;
+                #else
+                  WGM2_FAST_PWM;
+                #endif
+            }
+            else wgm = WGM_FAST_PWM_ICRn;
+          }
+          // If PHASE CORRECT values are closes to desired f
+          else if (ABS(f_temp_phase_correct - f_desired) < ABS(f - f_desired)) {
+            f = f_temp_phase_correct;
+            res = res_temp_phase_correct;
+            j = i;
+            // Set the Wave Generation Mode to PWM PHASE CORRECT
+            if (timer.n == 2) {
+              wgm =
+                #if ENABLED(USE_OCR2A_AS_TOP)
+                  WGM2_PWM_PC_OCR2A;
+                #else
+                  WGM2_PWM_PC;
+                #endif
+            }
+            else wgm = WGM_PWM_PC_ICRn;
           }
         }
       }
+      _SET_WGMnQ(timer.TCCRnQ, wgm);
+      _SET_CSn(timer.TCCRnQ, j);
 
       if (timer.n == 2) {
-        #ifdef TCCR2
-          _SET_WGMnQ(timer.TCCRnQ, WGM2_FAST_PWM);         // Waveform Generation Mode = FAST PWM (TOP = 255)
-        #elif defined TCCR2A
-          #if ENABLED(USE_OCR2A_AS_TOP)
-            _SET_WGMnQ(timer.TCCRnQ, WGM2_FAST_PWM_OCR2A); // Waveform Generation Mode = FAST PWM with OCR2A at TOP
-            _SET_OCRnQ(timer.OCRnQ, 0, resolution);        // Set OCR2A value (adjusting TOP) = resolution (as calculated)
-          #else
-            _SET_WGMnQ(timer.TCCRnQ, WGM2_FAST_PWM);
-          #endif
+        #if ENABLED(USE_OCR2A_AS_TOP)
+          _SET_OCRnQ(timer.OCRnQ, 0, res);  // Set OCR2A value (TOP) = res
         #endif
       }
       else {
-        _SET_WGMnQ(timer.TCCRnQ, WGM_FAST_PWM_ICRn);      // Waveform Generation Mode = FAST PWM with ICRn at TOP
-        _SET_ICRn(timer.ICRn, resolution);                // Set ICRn value (adjusting TOP) = resolution
+        _SET_ICRn(timer.ICRn, res);         // Set ICRn value (TOP) = res
       }
-      _SET_CSn(timer.TCCRnQ, j);                          // Clock Select Prescaler = j
     #endif // ARDUINO && !ARDUINO_ARCH_SAM
   }
 
