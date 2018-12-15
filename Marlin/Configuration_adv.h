@@ -226,24 +226,25 @@
  * FAST PWM FAN Settings
  *
  * Use to change the FAST FAN PWM frequency (if enabled in Configuration.h)
- * Combinations of PWM Prescale and PWM Resolutions used internally to produce a
+ * Combinations of PWM Modes, prescale values and TOP resolutions are used internally to produce a
  * frequency as close as possible to the desired frequency.
  *
  * FAST_PWM_FAN_FREQUENCY [undefined by default]
  *   Set this to your desired frequency.
- *   If left undefined this defaults to F = F_CPU/(256*8)
- *   ie F = 7.812 Khz on 16 MHz microcontrollers or F = 9.766 KHz on 20 MHz
+ *   If left undefined this defaults to F = F_CPU/(2*255*1)
+ *   ie F = 31.4 Khz on 16 MHz microcontrollers or F = 39.2 KHz on 20 MHz microcontrollers
+ *   These defaults are the same as with the old FAST_PWM_FAN implementation - no migration is required
  *
  * USE_OCR2A_AS_TOP [undefined by default]
- *   On boards using TIMER2 for PWM, only the prescaler values [1 , 8, 32, 64, 128, 256, 1042]
- *   can be used to achieve your desired frequency. Thus there are only a few possible frequencies on TIMER2:
- *   F = F_CPU/(256*[1, 8, 32, 64, 128, 256, 1042]) = [62.5 KHz, 7.8 KHz, 1.95 KHz, 977 Hz, 488 Hz, 244 Hz, 60 Hz], for F_CPU = 16 MHz
- *   This can be overcome by enabling USE_OCR2A_AS_TOP. However, if this option is enabled PWM will be unavailable on
+ *   On boards using TIMER2 for PWM, there are limitations involved that result in only a few possible frequencies on TIMER2. Here's a list:
+ *   16MHz MCUs: [62.5 KHz, 31.4 KHz (default), 7.8 KHz, 3.92 KHz, 1.95 KHz, 977 Hz, 488 Hz, 244 Hz, 60 Hz, 30 Hz]
+ *   20MHz MCUs: [78.1 KHz, 39.2 KHz (default), 9.77 KHz, 4.9 KHz, 2.44 KHz, 1.22 KHz, 610 Hz, 305 Hz, 153 Hz, 76 Hz, 38 Hz]
+ *   A wider set can be achieved by enabling USE_OCR2A_AS_TOP. However, if this option is enabled PWM will be unavailable on
  *   the pin OC2A. Thus, this option should only be used if you are not using the 0C2A pin for PWM. (Check your schematic)
  *   USE_OCR2A_AS_TOP sacrifices duty cycle control resolution to achieve this broader range of frequencies.
  */
 #if ENABLED(FAST_PWM_FAN)
-  #define FAST_PWM_FAN_FREQUENCY 20000
+  //#define FAST_PWM_FAN_FREQUENCY 31400
   //#define USE_OCR2A_AS_TOP
 #endif
 
