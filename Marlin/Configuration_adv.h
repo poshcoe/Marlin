@@ -244,7 +244,7 @@
  *   USE_OCR2A_AS_TOP sacrifices duty cycle control resolution to achieve this broader range of frequencies.
  */
 #if ENABLED(FAST_PWM_FAN)
-  //#define FAST_PWM_FAN_FREQUENCY 31400
+  #define FAST_PWM_FAN_FREQUENCY 20000
   //#define USE_OCR2A_AS_TOP
 #endif
 
@@ -1664,7 +1664,7 @@
   #define SPINDLE_LASER_FANPWM_PIN              HEATER_0_PIN      // select HEATER_x_PIN to use [0,1,2,3,4,5]
   #define SPINDLE_LASER_FANPWM_FAN               1                 // select FANx output to emulate [0,1,2]
   #define SPINDLE_LASER_FANPWM_POWERUP_DELAY    2000              // delay in milliseconds to allow spind/laser to come up to speed
-  #define SPINDLE_LASER_FANPWM_POWERDOWN_DELAY  5000              // delay in milliseconds to allow spindle/laser to come up to speed
+  #define SPINDLE_LASER_FANPWM_POWERDOWN_DELAY  10000             // delay in milliseconds to allow spindle/laser to come up to speed
   #define SPINDLE_LASER_FANPWM_INVERT           false             // invert PWM
 #endif
 

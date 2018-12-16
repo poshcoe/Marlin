@@ -28,13 +28,14 @@
 
             const uint8_t s = parser.ushortval('S', 255); // requested pwm duty
             const uint8_t s_last = fan_speed[SPINDLE_LASER_FANPWM_FAN]; // fan_speed[p] = the last pwm value set
-            const int8_t num_steps = s - s_last;
+            const int16_t num_steps = s - s_last;
 
             millis_t ms_next = 0;
-            int8_t i = 0;
+            int16_t i = 0;
             // increment/decrement pwm duty until it is at requested duty
-            if(num_steps > 0) // if we are increasing the PWM
+            if(num_steps > 0) { // if we are increasing the PWM
                 while (i < num_steps) {
+                    watchdog_reset();
                     const millis_t ms = millis();
                     if (ELAPSED(ms, ms_next)) {
                         ms_next = ms + STEP_UP_TIME;
@@ -42,8 +43,10 @@
                         thermalManager.set_pwm_duty(SPINDLE_LASER_FANPWM_PIN, s_last + i, 255, SPINDLE_LASER_FANPWM_INVERT);
                     }
                 }
+            }
             else if(num_steps < 0) { // if we are decreasing the PWM
                 while (i > num_steps) {
+                    watchdog_reset();
                     const millis_t ms = millis();
                     if (ELAPSED(ms, ms_next)) {
                         ms_next = ms + STEP_DOWN_TIME;
@@ -52,8 +55,8 @@
                     }
                 }
             }
-            fan_speed[SPINDLE_LASER_FANPWM_FAN] = s;
 
+            fan_speed[SPINDLE_LASER_FANPWM_FAN] = MIN(s, 255U);
         #endif
     }
 

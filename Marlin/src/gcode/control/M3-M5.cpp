@@ -70,6 +70,40 @@ inline void delay_for_power_down() { gcode.dwell(SPINDLE_LASER_POWERDOWN_DELAY);
  * it accepts inputs of 0-255
  */
 
+/**
+ *  explamanation
+ *
+ *  ocr_val_mode()
+ *    gets S0-255 from the command
+ *    Spindle enable pin -> ON
+ *    Writes S0-255 to duty cycle of PWM
+ *
+ *  M3_M4()
+ *    wait until movements are done
+ *
+ *    #if SPINDLE_DIR_CHANGE true (if the spindle can change direction)
+ *      if SPINDLE_STOP_ON_DIR_CHANGE true and Spindle enabled and Spindle Dir Pin not requested Rotation Dir
+ *        Spindle Enable pin -> OFF
+ *        *wait for power down*
+ *      Spindle Dir Pin -> Rotation dir
+ *
+ *    #if SPINDLE_LASER_PWM true (if the spindle control supports PWM)
+ *      if O seen in command, call ocr_val_mode() (uses values from 0-255 to set the pwm duty)
+ *      else
+ *        get S value (spindle power) from command
+ *        if spindle power = 0
+ *          Spindle Enable pin -> OFF
+ *          Write duty cycle to 0
+ *          *wait for power down*
+ *        else
+ *          Convert spindle power to PWM duty
+ *          Writes 0-255 to duty cycle of PWM
+ *          *wait for power up*
+ *    #else (spindle doesn't support pwm)
+ *      turn spindle on
+ *      *wait for power up*
+ */
+
 inline void ocr_val_mode() {
   uint8_t spindle_laser_power = parser.value_byte();
   WRITE(SPINDLE_LASER_ENABLE_PIN, SPINDLE_LASER_ENABLE_INVERT); // turn spindle on (active low)
